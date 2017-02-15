@@ -16,6 +16,9 @@ https://wiki.onion.io/Tutorials/Reading-1Wire-Sensor-Data
 3. A crontab file should be started:
 * * * * * /usr/bin/python /root/tempcontrol.py
 
+4. Make a symbolic link for web display:
+ln -s /root/webkeezer/ /www/console/webkeezer
+
 ## Code
 
 The script tempcontrol.py switches a relay on/off based on a temperature and 
