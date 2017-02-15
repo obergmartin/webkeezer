@@ -1,9 +1,8 @@
-#import os
 from os import popen, system, path
-#from time import sleep
 from datetime import datetime
 
 data_dir = '/root/webkeezer/'
+
 	
 def getTemp(w1id):
 	#https://wiki.onion.io/Tutorials/Reading-1Wire-Sensor-Data
@@ -12,6 +11,7 @@ def getTemp(w1id):
 	result = popen(cmd).read()
 	t = int(result[result.find('t=')+2:])/1000.
 	return t
+
 	
 def getPinStatus(pinN):
 	p = str(pinN)
@@ -32,12 +32,11 @@ def setRelayOn():
 	cmd = "gpioctl dirout-high 18"
 	system(cmd)
 
+
 def setRelayOff():
 	cmd = "gpioctl dirout-low 18"
 	system(cmd)
-	
-def controlRelay():
-	pass
+
 	
 def makeFileName():
 	dt = datetime.now()
@@ -48,6 +47,7 @@ def makeFileName():
 	#fn = "keezerdata/%d_%d.txt"%(yr, wk)
 	fn = data_dir+"%s%s%s.txt"%(yr, mth, dd)
 	return fn
+
 
 def makeTimeStamp():
 	dt = datetime.now()
@@ -62,6 +62,7 @@ def makeTimeStamp():
 	t = ':'.join([hh, mm])
 	
 	return '-'.join([d, t])
+
 	
 def getKeezerParams():
 	with open('keezerparams.txt', 'r') as f:
@@ -77,6 +78,7 @@ def getKeezerParams():
 			return -1
 	return setpoint, deltaT
 
+
 def getRecentData():
 	try:
 		with open(data_dir+'recent.json', 'r') as f:
@@ -90,13 +92,10 @@ def getRecentData():
 	
 	
 def main():
-
 	setpoint, deltaT = getKeezerParams()
 	if setpoint == -100 or deltaT <= 0:
 		return 0
 	
-	states = ["off", "on"]
-
 	# get recent data	
 	last_tempC, last_temp2C, last_setpoint, last_relayState, last_floorState = getRecentData()
 	
@@ -105,6 +104,7 @@ def main():
 	
 	# get current relay state
 	relayState = getPinStatus(18)
+	states = ["off", "on"]
 	print "relay is %s"%states[relayState]
 
 	# get current temperatures
