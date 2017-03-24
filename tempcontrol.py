@@ -1,8 +1,11 @@
 from os import popen, system, path
 from datetime import datetime
+import csv
+import json
 
 data_dir = '/root/webkeezer/'
-
+floorPin = 11
+relayPin = 18
 	
 def getTemp(w1id):
 	#https://wiki.onion.io/Tutorials/Reading-1Wire-Sensor-Data
@@ -27,17 +30,44 @@ def getPinStatus(pinN):
 		state = 1	
 	return state
 
+def getRelayStatus():
+	cmd = "relay-exp read 0"
+	result = popen(cmd).read()
+	#print result
+	to_find = "state: "
+	# finding "state: "
+	#                  012345678
+	# > Reading RELAY0 state: ON
+	n = result.find(to_find) + 8
+	if result[n] == 'N': 
+		state = 1
+	else:
+		state = 0
+	return state
+
 	
 def setRelayOn():
-	cmd = "gpioctl dirout-high 18"
+	#cmd = "gpioctl dirout-high "+str(relayPin)
+	cmd = "relay-exp 0 on"
 	system(cmd)
 
 
 def setRelayOff():
-	cmd = "gpioctl dirout-low 18"
+	#cmd = "gpioctl dirout-low "+str(relayPin)
+	cmd = "relay-exp 0 off"
 	system(cmd)
 
 	
+def sendWarmEmail():
+	cmd = "sh email_tempwarning.sh"
+	#system(cmd)
+
+
+def sendFloodEmail():
+	cmd = "sh email_floodwarning.sh"
+	#system(cmd)
+
+
 def makeFileName():
 	dt = datetime.now()
 	#yr, wk, _ = dt.isocalendar()
@@ -64,6 +94,32 @@ def makeTimeStamp():
 	return '-'.join([d, t])
 
 	
+def writeJson():
+	def parseRow(r):
+	    pr = []
+	    for i in r:
+	        if len(i) == 0:
+	            pr.append('null')
+	        else:
+	            pr.append(float(i))
+	    return pr
+
+	dat = []
+	with open(makeFileName(), 'r') as f:
+	    c = csv.reader(f)
+	    for row in c:
+	        dat.append(parseRow(row))
+	
+	jt1 = 't1='+json.dumps([i[0] for i in dat])+'\n'
+	jt2 = 't2='+json.dumps([i[1] for i in dat])+'\n'
+	jon = 'rel='+json.dumps([i[3] for i in dat])+'\n'
+	
+	with open(data_dir+'plotdata.json', 'w') as f:
+	    f.write(jt1.replace('"',''))
+	    f.write(jt2.replace('"',''))
+	    f.write(jon.replace('"',''))
+
+
 def getKeezerParams():
 	with open('keezerparams.txt', 'r') as f:
 		try:
@@ -100,10 +156,13 @@ def main():
 	last_tempC, last_temp2C, last_setpoint, last_relayState, last_floorState = getRecentData()
 	
 	# get current floor state
-	floorState = getPinStatus(11)
+	floorState = getPinStatus(floorPin)
+	if floorState:
+		sendFloodEmail()
 	
 	# get current relay state
-	relayState = getPinStatus(18)
+	#relayState = getPinStatus(relayPin)
+	relayState = getRelayStatus()
 	states = ["off", "on"]
 	print "relay is %s"%states[relayState]
 
@@ -115,6 +174,9 @@ def main():
 	print "temperature is %s"%tempC
 	print "setpoint is %s"%setpoint
 	
+	if tempC > (setpoint + 3):
+		sendWarmEmail()
+
 	# make relay decision based on tempC
 	if tempC > (setpoint+deltaT):
 		if relayState == 0:
@@ -155,6 +217,8 @@ def main():
 		#ln = ','.join([makeTimeStamp(), str(tempC), str(setpoint), str(relayState)])+'\n'
 		ln = ','.join([str(i) for i in [c1, c2, s, r, fl]])+'\n'
 		f.write(ln)
+	
+	writeJson()
 	
 	
 if __name__ == "__main__":
