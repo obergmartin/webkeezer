@@ -13,9 +13,6 @@ To install:
 2. Follow the 1-wire setup instructions at:
 https://wiki.onion.io/Tutorials/Reading-1Wire-Sensor-Data
 
-3. A crontab file should be started:
-* * * * * /usr/bin/python /root/tempcontrol.py
-
 4. Make a symbolic link for web display:
 ln -s /root/webkeezer/ /www/console/webkeezer
 
@@ -27,7 +24,4 @@ the setpoint and temperature delta defined in lines 1 and 2 of keezerparams.txt.
 
 ## Run
 
-Start the cron job with:
-
-/etc/init.d/cron enable
-/etc/init.d/cron start
+python /root/tempcontrol.py
