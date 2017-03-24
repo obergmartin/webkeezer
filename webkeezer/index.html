@@ -4,6 +4,8 @@
 <head>
 <title>WebKeezer</title>
 <meta name=viewport content='width=370'>
+<link rel="stylesheet" href="chartist.css">
+<script src="https://cdn.jsdelivr.net/chartist.js/latest/chartist.min.js"></script>
 </head>
 
 <body bgcolor=#ffffff text=#000000 link=#ff0000 vlink=#880000 alink=#00ff00>
@@ -21,6 +23,96 @@
 <script type="text/javascript" src="script.js"></script>
 
 
+<script type="text/javascript" src="plotdata.json"></script>
+ <script type="text/javascript" src="recent.json"></script>
+ 
+ <script>
+   
+ </script>
+ 
+  <div class="ct-chart ct-perfect-fourth">
+  
+  <script>
+  // I'm not storing time stamps with temperature data
+  // so I generate timestamps in java
+  var t0 = 8*60*60*1000;
+  var ts = [];
+  var ts_tick = [];
+  for (var i=0; i<t1.length; i++) {
+      var d = new Date(t0+i*60*1000);
+      var hh = d.getHours();
+      ts.push(hh+':00');
+      if (i%60 === 0) { 
+        ts_tick.push(hh); 
+        console.log(hh);
+      }
+      if (rel[i] === null) {rel[i] = rel[i-1]; }
+      if (rel[i] === 1) {rel[i] = 12; } else { rel[i] = 4;}
+      
+  }
+  // make vertical shaded regions to represent the freezer
+  // relay being on.
+  for (var i=0; i<t1.length; i++) {
+    //rel[i] = 4+(rel[i]*7);
+  }
+  
+var plot_data = {
+  labels: ts,
+  series: [
+    {
+      name:'relay-plot',
+      data: rel
+    },{
+      name:'temp2-plot',
+      data: t2
+    },{
+      name:'temp1-plot',
+      data: t1
+    }
+  ]};
+  
+var options = {
+  width: '330px',
+  height: '200px',
+  ticks: ts,
+  axisX: {
+    labelInterpolationFnc: function(value, index) {
+      return index % 120 === 0 ? value : null;
+    }
+  },
+  axisY: {
+    onlyInteger: true,
+    offset: 5,
+    divisor: 1,
+    ticks: [4,5,6,7,8,9,10,11,12],
+    stretch: false,
+  },
+  series: {
+    'temp2-plot': {
+      showArea: false,
+      showPoint: false,
+      fillHoles: true,	
+      showLine: true
+    },
+    'temp1-plot': {
+      showArea: true,
+      showPoint: false,
+      fillHoles: true,
+      showLine: true
+    },
+    'relay-plot': {
+      showArea: true,
+      showPoint: false,
+      showLine: false
+    }
+  }
+};
+
+new Chartist.Line('.ct-chart', plot_data, options);
+  
+
+</script>
+</div>
 
 </body>
 
