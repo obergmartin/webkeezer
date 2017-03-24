@@ -12,7 +12,7 @@ var setpointtext = document.getElementById('setpointtext');
 
 
 timetext.innerText="Last reading at: " + data.time;
-temptext.innerText="Sensor Temp: " + data.tempC;
+temptext.innerText="Sensor Temp: " + data.temp1C;
 setpointtext.innerText="Setpoint: " + data.setpoint;
 relaytext.innerText="The relay is " + ["Off", "On"][data.relayState];
 temp2text.innerText="Tap Temp: " + data.temp2C;
