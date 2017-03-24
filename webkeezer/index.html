@@ -14,46 +14,26 @@
 <script type="text/javascript" src="recent.json"></script>
 
 
-<h4 id="timetext">Hi again.</h4>
-<h2 id="temptext">Variable Text</h2>
-<h2 id="setpointtext">Variable Text</h2>
-<h4 id="relaytext">A relay message.</h4>
-<h2 id="temp2text">xxx</h2>
-<h4 id="floortext">flood</h4>
+<h4 id="timetext">time</h4>
+<h2 id="temptext">temp1C</h2>
+<h2 id="setpointtext">setpoint</h2>
+<h4 id="relaytext">relayState</h4>
+<h2 id="temp2text">temp2C</h2>
+<h4 id="floortext">floorState</h4>
 <script type="text/javascript" src="script.js"></script>
 
 
 <script type="text/javascript" src="plotdata.json"></script>
- <script type="text/javascript" src="recent.json"></script>
+<script type="text/javascript" src="recent.json"></script>
  
- <script>
-   
- </script>
  
-  <div class="ct-chart ct-perfect-fourth">
+<div class="ct-chart ct-perfect-fourth">
   
   <script>
-  // I'm not storing time stamps with temperature data
-  // so I generate timestamps in java
-  var t0 = 8*60*60*1000;
-  var ts = [];
-  var ts_tick = [];
-  for (var i=0; i<t1.length; i++) {
-      var d = new Date(t0+i*60*1000);
-      var hh = d.getHours();
-      ts.push(hh+':00');
-      if (i%60 === 0) { 
-        ts_tick.push(hh); 
-        console.log(hh);
-      }
-      if (rel[i] === null) {rel[i] = rel[i-1]; }
-      if (rel[i] === 1) {rel[i] = 12; } else { rel[i] = 4;}
-      
-  }
   // make vertical shaded regions to represent the freezer
   // relay being on.
   for (var i=0; i<t1.length; i++) {
-    //rel[i] = 4+(rel[i]*7);
+    rel[i] = 4+(rel[i]*7);
   }
   
 var plot_data = {
@@ -95,13 +75,14 @@ var options = {
       showLine: true
     },
     'temp1-plot': {
-      showArea: true,
+      showArea: false,
       showPoint: false,
       fillHoles: true,
       showLine: true
     },
     'relay-plot': {
       showArea: true,
+      lineSmooth: Chartist.Interpolation.step(),      
       showPoint: false,
       showLine: false
     }
