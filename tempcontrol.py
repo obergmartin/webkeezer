@@ -3,10 +3,7 @@ from time import time, sleep
 from os import popen, system, path
 import csv
 import json
-import threading
-from json import encoder
 
-encoder.FLOAT_REPR = lambda x: format(x, '.1f')
 
 data_dir = '/root/webkeezer/'
 floorPin = 11
@@ -16,7 +13,6 @@ RELAY_DELAY = 20*60 # 20 minutes * 60 seconds
 EMAIL_DELAY = 15*60
 
 PARAM_FILE = 'keezerparams.txt'
-global log_keys
 
 log_keys = ['time', 'temp1C', 'temp2C', 'setpoint', 'relayState', 'floorState']
 
@@ -24,8 +20,6 @@ log_keys = ['time', 'temp1C', 'temp2C', 'setpoint', 'relayState', 'floorState']
 
 t_id1 = "28-0000045d835b"
 t_id2 = "28-0000045c9ecc"
-
-main_thread = threading.Event()
 
 
 def getTemp(w1id):
@@ -89,7 +83,6 @@ def makeFileName():
     yr = dt.year
     mth = '{:0>2}'.format(dt.month)
     dd = '{:0>2}'.format(dt.day)
-    #fn = "keezerdata/%d_%d.txt"%(yr, wk)
     fn = data_dir+"%s%s%s.txt"%(yr, mth, dd)
     return fn
 
@@ -170,18 +163,21 @@ def getRecentData():
     [d, t] = getDateTime()
 
     lastDat = {
-        'time'      : t, 
-        'temp1C'    : -999,
-        'temp2C'    : -999,
-        'setpoint'  : -999, 
-        'relayState': -999,
-        'floorState': -999
+        "time"      : t, 
+        "temp1C"    : -999,
+        "temp2C"    : -999,
+        "setpoint"  : -999, 
+        "relayState": -999,
+        "floorState": -999,
+        "lastRelayOff": 0
         }
 
+    j = json.JSONDecoder()
     try:
         with open(data_dir+'recent.json', 'r') as f:
-            # start at 7 to ignore "data = "
-            recent = json.loads(f.readline().strip()[7:])
+            l = f.readline()
+            l = l[7:].strip()
+            recent = json.loads(l)
     except:
         recent = {}
 
@@ -194,21 +190,26 @@ def getRecentData():
 
 def writeRecent(d):
     #print d
-    s = "data = {"
-    s += '"date":{!r},'.format(d['date'])
-    s += '"time":{!r},'.format(d['time'])
-    s += '"temp1C":{0:.1f},'.format(d['temp1C'])
-    s += '"temp2C":{0:.1f},'.format(d['temp2C'])
-    s += '"setpoint":{0:.1f},'.format(d['setpoint'])
-    s += '"relayState":{},'.format(d['relayState'])
-    s += '"floorState":{},'.format(d['floorState'])
-    s += '"lastRelayOff":{}'.format(d['lastRelayOff'])
-    s += '}\n'
+    #s = "data = {"
+    #s += '"date": {!r}, '.format(d['date'])
+    #s += '"time": {!r}, '.format(d['time'])
+    #s += '"temp1C": {0:.1f}, '.format(d['temp1C'])
+    #s += '"temp2C": {0:.1f}, '.format(d['temp2C'])
+    #s += '"setpoint": {0:.1f}, '.format(d['setpoint'])
+    #s += '"relayState": {}, '.format(d['relayState'])
+    #s += '"floorState": {}, '.format(d['floorState'])
+    #s += '"lastRelayOff": {}'.format(d['lastRelayOff'])
+    #s += '}'
 
-    print s
+    #print s
     
+    # Only for writing temps with one decimal place
+    d['temp1C'] = str(d['temp1C'])
+    d['temp2C'] = str(d['temp2C'])
+    l = json.dumps(d)
+    print l
     #j = json.JSONEncoder()
-    #s = 'data = ' + j.encode(d) + '\n'
+    s = 'data = ' + l + '\n'
     
     # write new recent data
     with open(data_dir+'recent.json', 'w') as f:
@@ -224,10 +225,9 @@ def writeLog(d):
         #ln = ','.join([str(i) for i in [c1, c2, s, r, fl]])+'\n'
         f.write(ln + '\n')
 
-
 def run():
-    global lastDat
-    global last_relay_off
+    lastDat = getRecentData()
+    last_relay_off = lastDat['lastRelayOff']
 
     curDate, curTime = getDateTime()
     # need to read each time in case of change
@@ -264,7 +264,7 @@ def run():
     elif temp1C < setpoint:
         if relayState == 1:
             setRelayOff()
-            last_relay_off = time()
+            last_relay_off = int(time())
             print "turning relay off"
             relayState = 0
     
@@ -272,7 +272,7 @@ def run():
         'date': curDate,
         'time': curTime, 
         'temp1C'      : temp1C,
-        'temp2C'      : round(temp2C,1),
+        'temp2C'      : temp2C,
         'setpoint'    : setpoint, 
         'relayState'  : relayState,
         'floorState'  : floorState,
@@ -289,8 +289,8 @@ def run():
         logVals = [curDat[k] for k in log_keys]
 
     logDat = dict(zip(log_keys, logVals))
-    if logDat['temp1C'] != '':
-        logDat['temp1C'] = round(logDat['temp1C'],1)
+    #if logDat['temp1C'] != '':
+    #    logDat['temp1C'] = logDat['temp1C'],1
     #print logDat
     writeLog(logDat)
     
@@ -304,6 +304,7 @@ def run():
 
 
 def main():
+    # use this function for continuously running program
     sleep(TEMP_DELAY-datetime.now().second)
     while True:
         run()
@@ -312,11 +313,7 @@ def main():
         sleep(TEMP_DELAY-datetime.now().second)
 
 
-lastDat = getRecentData()
-last_relay_off = 0
-
-main()
-
+run()
 
 
 
